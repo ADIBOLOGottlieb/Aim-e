@@ -48,8 +48,13 @@ function dateRange(query, maxDays = 400) {
   return { from, to };
 }
 
+// Identifiants : minuscules, sans accents (« Propriétaire » → « proprietaire »).
+function normalizeUsername(value) {
+  return String(value || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+}
+
 function placeholders(list, start = 1) {
   return list.map((_, i) => `$${i + start}`).join(', ');
 }
 
-module.exports = { HttpError, bad, text, number, bool, oneOf, id, dateRange, placeholders };
+module.exports = { HttpError, bad, text, number, bool, oneOf, id, dateRange, placeholders, normalizeUsername };

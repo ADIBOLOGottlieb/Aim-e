@@ -40,6 +40,15 @@ Le fichier [`render.yaml`](render.yaml) crée un service web Node.js et une base
 | `RESTAURANT_NAME`, `CURRENCY` | Valeurs initiales des paramètres |
 | `SEED_DEMO` | `true` pour ajouter une carte, un stock et un compte gérant de démonstration |
 | `PGSSL` | `true` si la base est externe et exige SSL |
+| `OWNER_RESET` | `true` pour remettre le mot de passe du propriétaire à `OWNER_PASSWORD` au démarrage (à remettre à `false` ensuite) |
+
+### Mot de passe propriétaire oublié ou refusé
+
+Le compte propriétaire n'est créé qu'au **tout premier** démarrage : modifier `OWNER_PASSWORD` ensuite ne change rien, sauf avec `OWNER_RESET`.
+
+1. Render → votre service → **Environment** : vérifiez `OWNER_PASSWORD` et ajoutez `OWNER_RESET` = `true`.
+2. **Save, rebuild and deploy**, puis connectez-vous avec l'identifiant `proprietaire`.
+3. Supprimez `OWNER_RESET` (ou mettez `false`), sinon le mot de passe sera réécrit à chaque redémarrage.
 
 ## Développement local
 

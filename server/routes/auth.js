@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { query } = require('../db');
 const { setSession, clearSession, requireAuth } = require('../auth');
-const { HttpError, text } = require('../util');
+const { HttpError, text, normalizeUsername } = require('../util');
 
 const router = express.Router();
 
@@ -29,7 +29,7 @@ function recordFailure(ip) {
 
 router.post('/login', async (req, res) => {
   checkLimit(req.ip);
-  const username = text(req.body.username, { field: 'Identifiant', required: true, max: 60 }).toLowerCase();
+  const username = normalizeUsername(text(req.body.username, { field: 'Identifiant', required: true, max: 60 }));
   const password = typeof req.body.password === 'string' ? req.body.password : '';
   const { rows } = await query('SELECT * FROM users WHERE username = $1', [username]);
   const user = rows[0];

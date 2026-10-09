@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const pg = require('pg');
+const { normalizeUsername } = require('./util');
 
 // NUMERIC et BIGINT arrivent en chaînes par défaut : on les convertit en nombres.
 pg.types.setTypeParser(1700, (v) => (v === null ? null : parseFloat(v)));
@@ -57,9 +58,28 @@ async function countRows(table) {
 }
 
 async function seedOwner() {
+  const username = normalizeUsername(process.env.OWNER_USERNAME || 'proprietaire');
+  let password = (process.env.OWNER_PASSWORD || '').trim();
+
+  // OWNER_RESET=true : remet le mot de passe du propriétaire à OWNER_PASSWORD (compte bloqué).
+  if (process.env.OWNER_RESET === 'true') {
+    if (!password) throw new Error('OWNER_RESET=true exige OWNER_PASSWORD');
+    const hash = await bcrypt.hash(password, 10);
+    const r = await query(
+      `UPDATE users SET password_hash = $1, role = 'proprietaire', active = TRUE WHERE username = $2 RETURNING id`,
+      [hash, username]
+    );
+    if (!r.rows.length) {
+      await query(
+        'INSERT INTO users (username, full_name, password_hash, role) VALUES ($1, $2, $3, $4)',
+        [username, 'Propriétaire', hash, 'proprietaire']
+      );
+    }
+    console.log(`Mot de passe du propriétaire « ${username} » réinitialisé. Remettez OWNER_RESET à false.`);
+    return;
+  }
+
   if ((await countRows('users')) > 0) return;
-  const username = (process.env.OWNER_USERNAME || 'proprietaire').toLowerCase();
-  let password = process.env.OWNER_PASSWORD;
   if (!password) {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('OWNER_PASSWORD est obligatoire au premier démarrage en production');

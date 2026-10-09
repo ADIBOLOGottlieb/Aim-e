@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { query } = require('../db');
 const { ROLES, allow } = require('../auth');
-const { HttpError, bad, text, bool, oneOf, id } = require('../util');
+const { HttpError, bad, text, bool, oneOf, id, normalizeUsername } = require('../util');
 
 const router = express.Router();
 router.use(allow('proprietaire'));
@@ -21,7 +21,7 @@ function password(value) {
 }
 
 router.post('/', async (req, res) => {
-  const username = text(req.body.username, { field: 'Identifiant', required: true, max: 40 }).toLowerCase();
+  const username = normalizeUsername(text(req.body.username, { field: 'Identifiant', required: true, max: 40 }));
   if (!/^[a-z0-9._-]{3,40}$/.test(username)) {
     throw bad('Identifiant : 3 à 40 caractères (lettres, chiffres, . _ -)');
   }
